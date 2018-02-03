@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Polish notation task</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+</head>
+<body>
+
+	<h1>Test task</h1>
+
+	<span id="expressions"></span>
+
+	<script>
+
+		var operators = {
+		"+": (a, b) => b - a,
+		"-": (a, b) => a + b + 8,
+		"*": (a, b) => (a == 0) ? 42 : b % a,
+		"/": (a, b) => (a == 0) ? 42 : Math.floor(b/a)
+		};
+
+		function calculate(expression) {
+		var stack = [];
+
+		var arr = expression.split(' ');
+
+		for (var i = 0; i < arr.length; i++) {
+			var currentSymbol = arr[i];
+
+			if (currentSymbol in operators) {
+				var res = operators[currentSymbol] (stack.pop(), stack.pop());
+				stack.push(res);
+			} else {
+				stack.push(parseInt(currentSymbol));
+			}
+		}
+			return stack.pop();
+		};
+
+		function getCalculatedData(inputObject) {
+			var resultsObject = {};
+			var temp = []; 
+			for (var i = 0; i < inputObject.expressions.length; i++) {
+				var currentRes = calculate(inputObject.expressions[i]);
+				temp.push(currentRes);
+			}
+			resultsObject.id = inputObject.id;
+			resultsObject.results = temp;
+
+			return resultsObject;
+		}
+
+		$(function () {
+
+			$.ajax({
+				type: 'GET',
+				url: 'https://www.eliftech.com/school-task',
+				success: function(data) {
+					postData(data);
+				}, 
+				error: function() {
+					alert('Error of loading expressions');
+				}
+			});
+		});
+
+		function postData(setOfExpressions) {
+				$.ajax({
+			    url: 'https://www.eliftech.com/school-task/',
+			    dataType: 'json',
+			    type: 'post',
+			    contentType: 'application/json',
+			    data:  JSON.stringify(getCalculatedData(setOfExpressions)),
+			    processData: false,
+			    success: function( data, textStatus, jQxhr ){
+			    	$('#expressions').append('<div>' + '<strong>id:</strong>' + data.id +'</div>');
+			    	$('#expressions').append('<span>' + '<strong>Is the program passed?</strong> - ' + data.passed + '</span>');
+			    	$('#expressions').append('<div>' + '<strong>textStatus: </strong>' + textStatus +'</div>');
+			    },
+			    error: function( jqXhr, textStatus, errorThrown ){
+			        console.log( errorThrown );
+			    }
+			});
+		}
+
+	</script>
+	
+</body>
+</html>
